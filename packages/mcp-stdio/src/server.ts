@@ -1,8 +1,10 @@
 import crypto from "node:crypto";
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import pkg from "../package.json" assert { type: "json" };
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version?: string };
 import {
   CurlRequestInput,
   CurlResponse,
