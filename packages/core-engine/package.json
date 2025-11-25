@@ -15,6 +15,12 @@
     "url": "https://github.com/calibress/curl-mcp.git",
     "directory": "packages/core-engine"
   },
+  "funding": [
+    {
+      "type": "paypal",
+      "url": "https://www.paypal.com/paypalme/CraigPrescott356"
+    }
+  ],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
