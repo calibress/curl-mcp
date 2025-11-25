@@ -1,0 +1,15 @@
+{
+  "name": "curl-mcp",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:core && npm run build:mcp-stdio",
+    "build:core": "npm --workspace @curl-mcp/core-engine run build",
+    "build:mcp-stdio": "npm --workspace @curl-mcp/mcp-stdio run build",
+    "test": "echo \"todo\""
+  }
+}

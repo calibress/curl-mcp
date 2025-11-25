@@ -1,0 +1,21 @@
+{
+  "name": "@curl-mcp/core-engine",
+  "version": "0.0.1",
+  "description": "Core HTTP/curl engine for curl-mcp.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist"
+  },
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.0",
+    "typescript": "^5.5.0"
+  }
+}

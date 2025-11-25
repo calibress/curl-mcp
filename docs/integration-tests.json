@@ -1,0 +1,370 @@
+{
+  "description": "High-level integration tests for curl-mcp. These can be executed manually, by scripts, or by an AI agent using the curl_request MCP tool.",
+  "version": "0.1.0",
+  "notes": [
+    "These are NOT strict assertions, just expected behaviours and shapes.",
+    "Endpoints are chosen to be public and generally reliable, but they can change over time.",
+    "Timeouts, status codes, and response bodies should be treated as 'expected patterns', not hard guarantees."
+  ],
+  "tests": [
+    {
+      "id": "simple-get-example.com",
+      "category": "basic",
+      "description": "Simple GET to example.com to verify basic connectivity, headers, and response shaping.",
+      "input": {
+        "url": "https://example.com",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect HTTP 200 OK from example.com.",
+          "Response body should be non-empty HTML.",
+          "Headers should include a Content-Type header (e.g. text/html)."
+        ]
+      }
+    },
+    {
+      "id": "json-post-echo",
+      "category": "json",
+      "description": "POST JSON payload to a public echo API to verify JSON body handling.",
+      "input": {
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json",
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "body": "{\"title\":\"curl-mcp test\",\"body\":\"Testing POST functionality\",\"userId\":1}",
+        "timeout_seconds": 15
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expected status code: 201 Created (JSONPlaceholder behaviour).",
+          "Response JSON should echo the title/body/userId, plus a new id field.",
+          "Confirms request body is transmitted correctly and response is parsed as text."
+        ]
+      }
+    },
+    {
+      "id": "header-round-trip-github",
+      "category": "headers",
+      "description": "Send custom headers to GitHub API and confirm they are accepted and the request is shaped correctly, even though auth is missing.",
+      "input": {
+        "url": "https://api.github.com/user",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1",
+          "X-Curl-MCP-Test": "header-round-trip"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "4xx",
+        "notes": [
+          "GitHub /user requires authentication, so a 401 Unauthorized is expected.",
+          "Even with 401, the response should be well-formed JSON in the body.",
+          "This test confirms headers are sent correctly and non-2xx responses are handled cleanly."
+        ]
+      }
+    },
+    {
+      "id": "timeout-behaviour",
+      "category": "timeout",
+      "description": "Call a slow endpoint with an intentionally short timeout to verify timeout handling and advice messaging.",
+      "input": {
+        "url": "https://httpbin.org/delay/5",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 2
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "network_error_or_timeout",
+        "notes": [
+          "Expect the client to abort before the server responds (timeout).",
+          "curl-mcp should set ok=false and status='error' (or equivalent).",
+          "Advice should include a suggestion to increase timeout_seconds."
+        ]
+      }
+    },
+    {
+      "id": "error-handling-non-2xx",
+      "category": "errors",
+      "description": "Deliberately hit an endpoint that returns a non-2xx status to verify error shaping.",
+      "input": {
+        "url": "https://httpbin.org/status/418",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "4xx_or_5xx",
+        "notes": [
+          "httpbin 418 returns the classic 'I'm a teapot' response.",
+          "curl-mcp should set ok=false, code=418, status or message reflecting HTTP status.",
+          "Response body should be captured as text for inspection."
+        ]
+      }
+    },
+    {
+      "id": "joke-of-the-day",
+      "category": "fun",
+      "description": "Fetch a random joke to confirm JSON-ish payloads and simple text parsing.",
+      "input": {
+        "url": "https://official-joke-api.appspot.com/jokes/random",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect JSON with setup/punchline fields (API may evolve).",
+          "Response body should be valid JSON string; LLM can parse it if needed.",
+          "Demonstrates 'fun'/non-critical use of the tool."
+        ]
+      }
+    },
+    {
+      "id": "random-cat-image",
+      "category": "binaryish",
+      "description": "Fetch metadata for a random cat image to exercise 'image-like' endpoints (still returned as text JSON).",
+      "input": {
+        "url": "https://api.thecatapi.com/v1/images/search",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect JSON array with objects that include a `url` for the image.",
+          "We are NOT downloading the binary image; just verifying JSON handling.",
+          "Useful for future binary-mode design if we later fetch the actual image URL."
+        ]
+      }
+    },
+    {
+      "id": "random-dog-image",
+      "category": "binaryish",
+      "description": "Fetch a random dog image URL from a public API.",
+      "input": {
+        "url": "https://dog.ceo/api/breeds/image/random",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect JSON with message=<image_url> and status='success'.",
+          "Again, we do not download the binary image in this test.",
+          "Confirms basic JSON API compatibility."
+        ]
+      }
+    },
+    {
+      "id": "nasa-apod",
+      "category": "public-api",
+      "description": "Query NASA Astronomy Picture of the Day (APOD) with the DEMO_KEY to verify public API access.",
+      "input": {
+        "url": "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 15
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect JSON with fields like date, explanation, title, url.",
+          "This confirms we can hit third-party public APIs that respond with JSON.",
+          "If DEMO_KEY is rate-limited, treat non-2xx as a soft failure with a note."
+        ]
+      }
+    },
+    {
+      "id": "weather-london-sw1a",
+      "category": "public-api",
+      "description": "Fetch weather data for London (approx SW1A 0AA area) using a public weather API.",
+      "input": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=51.5010&longitude=-0.1416&hourly=temperature_2m",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 15
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Coordinates are roughly Westminster / SW1A 0AA.",
+          "Expect JSON with hourly.temperature_2m or similar structure.",
+          "This test proves we can call location-based open data APIs."
+        ]
+      }
+    },
+    {
+      "id": "response-type-json",
+      "category": "response-type",
+      "description": "Request JSON content and ask for parsed JSON response_type.",
+      "input": {
+        "url": "https://api.github.com",
+        "method": "GET",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "response_type": "json",
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Body should be pretty-printed JSON; if parse fails, advice should mention fallback to text."
+        ]
+      }
+    },
+    {
+      "id": "response-type-binary",
+      "category": "response-type",
+      "description": "Fetch a binary payload and request base64 output.",
+      "input": {
+        "url": "https://httpbin.org/image/png",
+        "method": "GET",
+        "response_type": "binary",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        },
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Expect body_base64 present, body null, and content-type image/png."
+        ]
+      }
+    },
+    {
+      "id": "error-dns",
+      "category": "errors",
+      "description": "Trigger DNS resolution failure to test error_type.",
+      "input": {
+        "url": "https://nonexistent.invalid",
+        "method": "GET",
+        "timeout_seconds": 5
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "network_error_or_timeout",
+        "notes": [
+          "Expect error_type=dns_error and error_details with ENOTFOUND."
+        ]
+      }
+    },
+    {
+      "id": "error-ssl",
+      "category": "errors",
+      "description": "Trigger SSL/TLS error to test error_type.",
+      "input": {
+        "url": "https://expired.badssl.com/",
+        "method": "GET",
+        "timeout_seconds": 10
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "network_error_or_timeout",
+        "notes": [
+          "Expect error_type=ssl_error and error_details referencing certificate/handshake."
+        ]
+      }
+    },
+    {
+      "id": "error-timeout",
+      "category": "timeout",
+      "description": "Force a timeout and verify categorization.",
+      "input": {
+        "url": "https://httpbin.org/delay/5",
+        "method": "GET",
+        "timeout_seconds": 2
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "network_error_or_timeout",
+        "notes": [
+          "Expect error_type=timeout and advice suggesting a higher timeout_seconds."
+        ]
+      }
+    },
+    {
+      "id": "cookies-persist",
+      "category": "session",
+      "description": "Enable persist_session to capture cookies from a response.",
+      "input": {
+        "url": "https://httpbin.org/cookies/set?testcookie=foo",
+        "method": "GET",
+        "persist_session": true,
+        "response_type": "json",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        }
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Current behavior: fetch follows redirect and drops Set-Cookie; cookies array will be empty.",
+          "Workaround: set follow_redirects=false on this call to capture the 302 Set-Cookie, then call /cookies with persist_session=true to see it applied."
+        ]
+      }
+    },
+    {
+      "id": "redirect-capture",
+      "category": "redirects",
+      "description": "Disable redirect following to capture the redirect response.",
+      "input": {
+        "url": "https://httpbin.org/redirect-to?url=https://example.com",
+        "method": "GET",
+        "follow_redirects": false,
+        "response_type": "text",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        }
+      },
+      "expected": {
+        "ok": false,
+        "status_family": "3xx",
+        "notes": [
+          "Expect 302/redirect status with Location header; body may be empty."
+        ]
+      }
+    }
+  ]
+}
