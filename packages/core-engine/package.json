@@ -1,7 +1,20 @@
 {
-  "name": "@curl-mcp/core-engine",
+  "name": "@calibress/curl-mcp-core",
   "version": "0.0.1",
   "description": "Core HTTP/curl engine for curl-mcp.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "curl",
+    "http",
+    "http-client",
+    "ai-agents"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/calibress/curl-mcp.git",
+    "directory": "packages/core-engine"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +22,10 @@
     "build": "tsc -b",
     "clean": "rm -rf dist"
   },
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"

@@ -1,7 +1,21 @@
 {
-  "name": "@curl-mcp/mcp-stdio",
+  "name": "@calibress/curl-mcp",
   "version": "0.0.1",
-  "description": "curl-mcp stdio MCP server for local use (ChatGPT Desktop).",
+  "description": "curl-mcp stdio MCP server for local use with MCP clients.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "curl",
+    "http",
+    "http-client",
+    "cli",
+    "ai-agents"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/calibress/curl-mcp.git",
+    "directory": "packages/mcp-stdio"
+  },
   "type": "module",
   "main": "dist/server.js",
   "types": "dist/server.d.ts",
@@ -13,10 +27,13 @@
     "dev": "tsx src/server.ts",
     "clean": "rm -rf dist"
   },
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "dependencies": {
-    "@curl-mcp/core-engine": "0.0.1",
+    "@calibress/curl-mcp-core": "0.0.1",
     "@modelcontextprotocol/sdk": "^1.22.0",
     "zod": "^3.23.0"
   },

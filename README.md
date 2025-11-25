@@ -57,18 +57,58 @@ npm run build
 
 ## ▶️ Running the MCP server
 
-Start the stdio MCP server:
+You can run `curl-mcp` either directly from this source repo, or via an installed CLI on your `PATH`.
+
+**From source (local clone)**
+
+From the root of your local `curl-mcp` clone:
 
 ```bash
 npm run dev:stdio
 ```
 
 This launches the `curl-mcp` MCP server on stdio.  
-Your MCP client should then be configured (via its own UI or config system) to run that command.
+Configure your MCP client to run that same command in the repo directory.  
+Some clients let you set the working directory explicitly; others work better if you pass a `--prefix` pointing at your clone.  
+For example, an `mcpServers` JSON block might look like:
+
+```json
+{
+  "mcpServers": {
+    "curl-mcp": {
+      "command": "npm",
+      "args": [
+        "--prefix",
+        "/PATH/TO/YOUR/curl-mcp",
+        "run",
+        "dev:stdio"
+      ]
+    }
+  }
+}
+```
+
+Make sure the working directory for the command is the root of your local `curl-mcp` clone.
+
+**From CLI (`curl-mcp` on PATH)**
+
+If you have installed the `curl-mcp` CLI so that it is available on your `PATH`  
+(for example via Homebrew, npm, or another package manager), you can point your MCP client at it directly without using `npm run`:
+
+```json
+{
+  "mcpServers": {
+    "curl-mcp": {
+      "command": "curl-mcp",
+      "args": []
+    }
+  }
+}
+```
 
 > **Important:**  
-> MCP clients each have their own method of adding a local MCP server.  
-> Please refer to your client’s documentation for how to register a local command.
+> MCP clients each have their own method of adding a local MCP server and choosing the working directory.  
+> Use the examples above as a guide, but refer to your client’s documentation for the exact configuration format.
 
 ---
 

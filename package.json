@@ -8,8 +8,9 @@
   ],
   "scripts": {
     "build": "npm run build:core && npm run build:mcp-stdio",
-    "build:core": "npm --workspace @curl-mcp/core-engine run build",
-    "build:mcp-stdio": "npm --workspace @curl-mcp/mcp-stdio run build",
+    "build:core": "npm --workspace @calibress/curl-mcp-core run build",
+    "build:mcp-stdio": "npm --workspace @calibress/curl-mcp run build",
+    "dev:stdio": "npm --workspace @calibress/curl-mcp run dev",
     "test": "echo \"todo\""
   }
 }

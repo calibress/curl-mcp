@@ -1,4 +1,4 @@
-# @curl-mcp/core-engine
+# @calibress/curl-mcp-core
 
 Core HTTP engine for the curl-mcp stdio server. Provides request/response shaping, timeouts, and optional response_type handling (text/json/binary).
 

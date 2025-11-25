@@ -9,7 +9,7 @@ import {
   CurlRequestInput,
   CurlResponse,
   executeHttpRequest
-} from "@curl-mcp/core-engine";
+} from "@calibress/curl-mcp-core";
 
 const SERVER_VERSION = pkg.version ?? "0.0.0";
 
