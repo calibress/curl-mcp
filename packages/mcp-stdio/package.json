@@ -1,6 +1,6 @@
 {
   "name": "@calibress/curl-mcp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "curl-mcp stdio MCP server for local use with MCP clients.",
   "keywords": [
     "mcp",
@@ -39,7 +39,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@calibress/curl-mcp-core": "0.0.2",
+    "@calibress/curl-mcp-core": "0.0.3",
     "@modelcontextprotocol/sdk": "^1.22.0",
     "zod": "^3.23.0"
   },
