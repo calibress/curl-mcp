@@ -46,6 +46,24 @@ No client-specific configuration examples are included here — each MCP client 
 
 ---
 
+## 🚀 Quick Start
+
+- From source (local clone):
+  ```bash
+  npm install
+  npm run dev:stdio
+  ```
+
+- From CLI (installed):
+  ```bash
+  brew install calibress/mcp/curl-mcp    # or: npm install -g @calibress/curl-mcp
+  curl-mcp
+  ```
+
+Then point your MCP client at the command you use (see configs below).
+
+---
+
 ## 📦 Installation (from source)
 
 ```bash
@@ -92,8 +110,7 @@ Make sure the working directory for the command is the root of your local `curl-
 
 **From CLI (`curl-mcp` on PATH)**
 
-If you have installed the `curl-mcp` CLI so that it is available on your `PATH`  
-(for example via Homebrew, npm, or another package manager), you can point your MCP client at it directly without using `npm run`:
+If `curl-mcp` is on your `PATH` (for example via Homebrew or npm), point your MCP client at it directly without using `npm run`:
 
 ```json
 {
