@@ -109,16 +109,20 @@ export const executeHttpRequest = async (
       const buffer = Buffer.from(await res.arrayBuffer());
       responseBodyBase64 = buffer.toString("base64");
       responseBody = undefined;
-    } else if (responseType === "json") {
-      try {
-        const parsed = await res.json();
-        responseBody = JSON.stringify(parsed, null, 2);
-      } catch (parseErr) {
-        responseBody = await res.text();
-        responseShape.advice?.push("JSON parse failed; body returned as text.");
-      }
     } else {
-      responseBody = await res.text();
+      // Read the body once, then optionally parse JSON to avoid double-read errors.
+      const rawText = await res.text();
+      if (responseType === "json") {
+        try {
+          const parsed = JSON.parse(rawText);
+          responseBody = JSON.stringify(parsed, null, 2);
+        } catch (parseErr) {
+          responseBody = rawText;
+          responseShape.advice?.push("JSON parse failed; body returned as text.");
+        }
+      } else {
+        responseBody = rawText;
+      }
     }
 
     const timingMs = Math.round(performance.now() - start);
