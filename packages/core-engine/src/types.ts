@@ -23,6 +23,7 @@ export interface CurlRequestInput {
   response_type?: ResponseType;
   persist_session?: boolean;
   follow_redirects?: boolean;
+  clear_session?: boolean;
 }
 
 export interface CurlRequestDetails {
@@ -34,12 +35,14 @@ export interface CurlRequestDetails {
   response_type?: ResponseType;
   persist_session?: boolean;
   follow_redirects?: boolean;
+  clear_session?: boolean;
 }
 
 export interface CurlResponseDetails {
   status_code?: number;
   status_text?: string;
   headers?: Record<string, string>;
+  content_type?: string;
   body?: string | null;
   body_base64?: string | null;
   error?: string;

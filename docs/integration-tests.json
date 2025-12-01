@@ -1,6 +1,6 @@
 {
   "description": "High-level integration tests for curl-mcp. These can be executed manually, by scripts, or by an AI agent using the curl_request MCP tool.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "notes": [
     "These are NOT strict assertions, just expected behaviours and shapes.",
     "Endpoints are chosen to be public and generally reliable, but they can change over time.",
@@ -268,7 +268,7 @@
         "ok": true,
         "status_family": "2xx",
         "notes": [
-          "Expect body_base64 present, body null, and content-type image/png."
+          "Expect body_base64 present, body null, and content-type image/png (headers + response.content_type)."
         ]
       }
     },
@@ -331,6 +331,7 @@
         "url": "https://httpbin.org/cookies/set?testcookie=foo",
         "method": "GET",
         "persist_session": true,
+        "follow_redirects": false,
         "response_type": "json",
         "headers": {
           "User-Agent": "curl-mcp-test/0.1"
@@ -340,8 +341,8 @@
         "ok": true,
         "status_family": "2xx",
         "notes": [
-          "Current behavior: fetch follows redirect and drops Set-Cookie; cookies array will be empty.",
-          "Workaround: set follow_redirects=false on this call to capture the 302 Set-Cookie, then call /cookies with persist_session=true to see it applied."
+          "With follow_redirects=false, expect a 302 and Set-Cookie to be captured in cookies[].",
+          "persist_session=true should store the cookie for this host for future requests."
         ]
       }
     },
@@ -363,6 +364,73 @@
         "status_family": "3xx",
         "notes": [
           "Expect 302/redirect status with Location header; body may be empty."
+        ]
+      }
+    },
+    {
+      "id": "cookies-read-after-set",
+      "category": "session",
+      "description": "Read cookies after a prior set when persist_session is enabled.",
+      "input": {
+        "url": "https://httpbin.org/cookies",
+        "method": "GET",
+        "persist_session": true,
+        "response_type": "json",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        }
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Run after cookies-persist to confirm stored cookies are sent.",
+          "Expect response body to include the testcookie set previously.",
+          "If run standalone, cookie map may be empty (soft pass)."
+        ]
+      }
+    },
+    {
+      "id": "json-parse-fallback",
+      "category": "response-type",
+      "description": "Force a JSON parse failure and confirm fallback + advice.",
+      "input": {
+        "url": "https://example.com",
+        "method": "GET",
+        "response_type": "json",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        }
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Body is HTML; response_type=json should fall back to text.",
+          "Advice should mention JSON parse failure fallback."
+        ]
+      }
+    },
+    {
+      "id": "clear-session",
+      "category": "session",
+      "description": "Clear stored cookies for the host before making a request.",
+      "input": {
+        "url": "https://httpbin.org/cookies",
+        "method": "GET",
+        "persist_session": true,
+        "clear_session": true,
+        "response_type": "json",
+        "headers": {
+          "User-Agent": "curl-mcp-test/0.1"
+        }
+      },
+      "expected": {
+        "ok": true,
+        "status_family": "2xx",
+        "notes": [
+          "Cookies map should be empty after clearing, even if set in previous tests.",
+          "Advice should mention session cookies cleared before request."
         ]
       }
     }

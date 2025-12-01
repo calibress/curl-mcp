@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const pkg = require("../package.json") as PackageJson;
 
 const args = process.argv.slice(2);
+const useHttp = args.includes("--http");
 
 if (args.includes("--version") || args.includes("-v")) {
   const version = pkg.version ?? "0.0.0";
@@ -13,5 +14,9 @@ if (args.includes("--version") || args.includes("-v")) {
   process.exit(0);
 }
 
-// Default: start the stdio MCP server
-await import("./server.js");
+// Start the requested transport
+if (useHttp) {
+  await import("./http-server.js");
+} else {
+  await import("./server.js");
+}

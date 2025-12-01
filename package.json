@@ -1,7 +1,7 @@
 {
   "name": "curl-mcp",
   "private": true,
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "workspaces": [
     "packages/*"
@@ -11,6 +11,8 @@
     "build:core": "npm --workspace @calibress/curl-mcp-core run build",
     "build:mcp-stdio": "npm --workspace @calibress/curl-mcp run build",
     "dev:stdio": "npm --workspace @calibress/curl-mcp run dev",
+    "dev:http": "npm --workspace @calibress/curl-mcp run dev:http",
+    "smoke:http": "node tools/smoke-http.mjs",
     "test": "echo \"todo\""
   }
 }
