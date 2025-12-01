@@ -16,7 +16,8 @@ export const createResponseSkeleton = (
     timeout_seconds: input.timeout_seconds,
     response_type: input.response_type,
     persist_session: input.persist_session,
-    follow_redirects: input.follow_redirects
+    follow_redirects: input.follow_redirects,
+    clear_session: input.clear_session
   },
   response: {},
   advice: [],

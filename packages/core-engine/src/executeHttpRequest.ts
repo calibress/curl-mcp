@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { performance } from "node:perf_hooks";
 import { createResponseSkeleton } from "./outputTemplate.js";
 import {
@@ -8,9 +9,12 @@ import {
   ResponseType
 } from "./types.js";
 
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json") as { version?: string };
+
 const MAX_TIMEOUT_SECONDS = 120;
 const DEFAULT_RESPONSE_TYPE: ResponseType = "text";
-const DEFAULT_USER_AGENT = "curl-mcp/0.0.1";
+const DEFAULT_USER_AGENT = `curl-mcp/${pkg.version ?? "0.0.0"}`;
 
 const normalizeMethod = (method: HttpMethod): HttpMethod =>
   method.toUpperCase() as HttpMethod;
@@ -61,6 +65,14 @@ const storeCookies = (host: string | null, cookies: string[]) => {
   cookieJar.set(host, jar);
 };
 
+const clearCookies = (host: string | null | undefined) => {
+  if (!host) {
+    cookieJar.clear();
+    return;
+  }
+  cookieJar.delete(host);
+};
+
 export const executeHttpRequest = async (
   ctx: CurlContext | undefined,
   input: CurlRequestInput
@@ -73,6 +85,7 @@ export const executeHttpRequest = async (
   const timeoutMs = timeoutSeconds * 1000;
   const responseType: ResponseType = input.response_type ?? DEFAULT_RESPONSE_TYPE;
   const host = getHostFromUrl(input.url);
+  const sessionCleared = Boolean(input.clear_session);
 
   const responseShape = createResponseSkeleton(ctx, { ...input, method });
 
@@ -82,6 +95,10 @@ export const executeHttpRequest = async (
   const timeout = setTimeout(() => controller.abort(new Error("Request timed out")), timeoutMs);
 
   try {
+    if (sessionCleared) {
+      clearCookies(host);
+    }
+
     const headers = { ...(input.headers ?? {}) };
     if (!headers["User-Agent"] && !headers["user-agent"]) {
       headers["User-Agent"] = DEFAULT_USER_AGENT;
@@ -105,6 +122,8 @@ export const executeHttpRequest = async (
 
     const start = performance.now();
     const res = await fetch(input.url, init);
+    const contentType = res.headers.get("content-type") ?? undefined;
+    const responseHeaders = Object.fromEntries(res.headers.entries());
     if (responseType === "binary") {
       const buffer = Buffer.from(await res.arrayBuffer());
       responseBodyBase64 = buffer.toString("base64");
@@ -154,13 +173,23 @@ export const executeHttpRequest = async (
     responseShape.response = {
       status_code: res.status,
       status_text: res.statusText,
-      headers: Object.fromEntries(res.headers.entries()),
+      headers: responseHeaders,
+      content_type: contentType,
       body: responseBody ?? null,
       body_base64: responseBodyBase64,
       cookies: cookies.length ? cookies : undefined
     };
     if (input.persist_session && cookies.length) {
       responseShape.advice?.push("Cookies returned; persist_session enabled.");
+    }
+    if (sessionCleared) {
+      responseShape.advice?.push("Session cookies cleared before request.");
+    }
+    if (responseType === "binary" && !contentType) {
+      responseShape.advice?.push("Binary response returned without content-type header.");
+    }
+    if (!res.ok && res.status >= 300 && res.status < 400 && input.follow_redirects === false) {
+      responseShape.advice?.push("Redirect captured because follow_redirects=false; check Location header.");
     }
   } catch (error) {
     const message =
@@ -170,7 +199,11 @@ export const executeHttpRequest = async (
       responseShape.error_type = "timeout";
     } else if (errorLower.includes("enotfound") || errorLower.includes("dns")) {
       responseShape.error_type = "dns_error";
-    } else if (errorLower.includes("econrefused") || errorLower.includes("econnrefused")) {
+    } else if (
+      errorLower.includes("econrefused") ||
+      errorLower.includes("econnrefused") ||
+      errorLower.includes("econnreset")
+    ) {
       responseShape.error_type = "connect_error";
     } else if (errorLower.includes("ssl") || errorLower.includes("tls")) {
       responseShape.error_type = "ssl_error";
@@ -185,6 +218,9 @@ export const executeHttpRequest = async (
     responseShape.response = {
       error: message
     };
+    if (sessionCleared) {
+      responseShape.advice?.push("Session cookies cleared before request.");
+    }
 
     if (message.toLowerCase().includes("timed out")) {
       responseShape.advice?.push("Increase timeout_seconds or retry later.");
