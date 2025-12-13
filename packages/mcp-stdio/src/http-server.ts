@@ -8,8 +8,6 @@ import { createCurlMcpServer } from "./serverFactory.js";
 
 const PORT = Number(process.env.MCP_PORT ?? process.env.PORT ?? 3000);
 const REQUIRE_KEY = (process.env.MCP_REQUIRE_KEY ?? "").toLowerCase() === "true";
-const EXECUTOR_SHARED_SECRET = process.env.CURL_MCP_EXECUTOR_SHARED_SECRET;
-const EXECUTOR_SHARED_SECRET_HEADER = "x-calibress-executor-secret";
 const API_KEYS = (process.env.MCP_API_KEYS ?? "")
   .split(",")
   .map((k) => k.trim())
@@ -42,13 +40,6 @@ const reject = (res: express.Response, status: number, message: string) => {
     error: { code: -32000, message },
     id: null
   });
-};
-
-const executorSecretMiddleware: express.RequestHandler = (req, res, next) => {
-  if (!EXECUTOR_SHARED_SECRET) return next();
-  const candidate = req.header(EXECUTOR_SHARED_SECRET_HEADER);
-  if (candidate && candidate === EXECUTOR_SHARED_SECRET) return next();
-  return reject(res, 401, "Unauthorized.");
 };
 
 const authMiddleware: express.RequestHandler = (req, res, next) => {
@@ -112,7 +103,7 @@ const extractSessionId = (header: string | string[] | undefined): string | undef
   return header;
 };
 
-app.post("/mcp", executorSecretMiddleware, authMiddleware, hostOriginMiddleware, async (req, res) => {
+app.post("/mcp", authMiddleware, hostOriginMiddleware, async (req, res) => {
   const sessionIdHeader = extractSessionId(req.headers["mcp-session-id"]);
 
   try {
@@ -152,7 +143,7 @@ app.post("/mcp", executorSecretMiddleware, authMiddleware, hostOriginMiddleware,
   }
 });
 
-app.get("/mcp", executorSecretMiddleware, authMiddleware, hostOriginMiddleware, async (req, res) => {
+app.get("/mcp", authMiddleware, hostOriginMiddleware, async (req, res) => {
   const sessionIdHeader = extractSessionId(req.headers["mcp-session-id"]);
   if (!sessionIdHeader || !transports.has(sessionIdHeader)) {
     res.status(400).send("Invalid or missing session ID");
@@ -170,7 +161,7 @@ app.get("/mcp", executorSecretMiddleware, authMiddleware, hostOriginMiddleware, 
   }
 });
 
-app.delete("/mcp", executorSecretMiddleware, authMiddleware, hostOriginMiddleware, async (req, res) => {
+app.delete("/mcp", authMiddleware, hostOriginMiddleware, async (req, res) => {
   const sessionIdHeader = extractSessionId(req.headers["mcp-session-id"]);
   if (!sessionIdHeader || !transports.has(sessionIdHeader)) {
     res.status(400).send("Invalid or missing session ID");
